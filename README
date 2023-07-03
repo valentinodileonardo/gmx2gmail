@@ -1,0 +1,27 @@
+Deutsche Post Email Forwarder
+Description
+The Deutsche Post Email Forwarder is a program that automates the process of forwarding Deutsche Post emails regarding "Briefankündigung" to desired email addresses. This program is specifically designed for users with GMX email accounts.
+
+How it Works
+The program utilizes the credentials provided by the user to log into their GMX email account securely. It then scans the inbox for emails from Deutsche Post with the subject line related to "Briefankündigung". 
+Once an eligible email is found, the program extracts the content and forwards it to the desired email addresses specified by the user.
+
+Prerequisites
+A GMX email account. If you don't have one, you can create it at https://www.gmx.com/.
+
+Installation
+Clone this repository to your local machine using git clone.
+Export the source into a runnable jar file and execute it.
+
+Important Notes
+This program is designed specifically for GMX email accounts. It may not work with other email providers.
+Please ensure that you keep your GMX email account credentials secure to protect your privacy and prevent unauthorized access.
+Make sure you have a stable internet connection while running the program to ensure seamless operation.
+Disclaimer
+This program is provided as-is without any warranty. Use it at your own risk. The developers of this program are not responsible for any misuse or unauthorized access to your email account.
+
+Contributing
+If you would like to contribute to this project, please fork the repository and submit a pull request with your changes. We welcome any improvements or bug fixes.
+
+License
+This project is licensed under the MIT License.
