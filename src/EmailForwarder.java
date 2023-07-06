@@ -22,6 +22,7 @@ public class EmailForwarder {
 				System.out.println("Caught Ctrl+C - Performing cleanup...");
 				sendLastMail();
 				System.out.println("Exiting ...");
+				isRunning = false;
 			}
 		});
 
@@ -40,7 +41,7 @@ public class EmailForwarder {
 		properties.put("mail.smtp.starttls.enable", "true");
 
 		// define a session to send emails
-		Session sendSession = Session.getInstance(properties, new Authenticator() {
+		sendSession = Session.getInstance(properties, new Authenticator() {
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
 				return new PasswordAuthentication(properties.getProperty("mail.smtp.user"),
@@ -76,31 +77,41 @@ public class EmailForwarder {
 				Thread.sleep(10000);
 
 				// get e-mails from the INBOX list
-				Message[] messages = gmxFolder.getMessages();
-
-				for (Message message : messages) {
-					System.out.println("New -Mail with subject: " + message.getSubject());
-
-					if (message.getSubject().contains("Ein Brief kommt in Kürze bei Ihnen an")) {
-						// copy email content
-						Message forwardedMessage = new MimeMessage(sendSession);
-						forwardedMessage.setFrom(new InternetAddress(gmxUsername));
-						forwardedMessage.setRecipients(Message.RecipientType.TO, InternetAddress.parse(gmailUsername));
-						forwardedMessage.setSubject(message.getSubject());
-						forwardedMessage.setText(message.getContent().toString());
-						forwardedMessage.setContent((Multipart) message.getContent());
-
-						Transport.send(forwardedMessage);
-						System.out.println("E-Mail forwarded: " + message.getSubject());
-					}
-
-					// delete from
-					message.setFlag(Flags.Flag.DELETED, true);
-					System.out.println("Deleted E-Mail with subject: " + message.getSubject());
-
-					// update directory
-					gmxFolder.expunge();
+				Message[] messages;
+				try {
+					messages = gmxFolder.getMessages();
+				} catch (Exception fce) {
+					fce.printStackTrace();
+					gmxFolder.close();
+					gmxFolder = gmxStore.getFolder("INBOX");
+					messages = gmxFolder.getMessages();
 				}
+
+				if (messages != null)
+					for (Message message : messages) {
+						System.out.println("New -Mail with subject: " + message.getSubject());
+
+						if (message.getSubject().contains("Ein Brief kommt in Kürze bei Ihnen an")) {
+							// copy email content
+							Message forwardedMessage = new MimeMessage(sendSession);
+							forwardedMessage.setFrom(new InternetAddress(gmxUsername));
+							forwardedMessage.setRecipients(Message.RecipientType.TO,
+									InternetAddress.parse(gmailUsername));
+							forwardedMessage.setSubject(message.getSubject());
+							forwardedMessage.setText(message.getContent().toString());
+							forwardedMessage.setContent((Multipart) message.getContent());
+
+							Transport.send(forwardedMessage);
+							System.out.println("E-Mail forwarded: " + message.getSubject());
+						}
+
+						// delete from
+						message.setFlag(Flags.Flag.DELETED, true);
+						System.out.println("Deleted E-Mail with subject: " + message.getSubject());
+
+						// update directory
+						gmxFolder.expunge();
+					}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -115,8 +126,14 @@ public class EmailForwarder {
 
 				forwardedMessage.setRecipients(Message.RecipientType.TO, InternetAddress.parse(gmailUsername));
 				forwardedMessage.setSubject("E-Mail Forwarder Exited");
-
+				forwardedMessage.setText("restart me");
 				Transport.send(forwardedMessage);
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		} catch (AddressException e) {
 			e.printStackTrace();
