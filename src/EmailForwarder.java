@@ -40,81 +40,80 @@ public class EmailForwarder {
 		properties.put("mail.smtp.password", gmxPassword);
 		properties.put("mail.smtp.starttls.enable", "true");
 
-		// define a session to send emails
-		sendSession = Session.getInstance(properties, new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(properties.getProperty("mail.smtp.user"),
-						properties.getProperty("mail.smtp.password"));
-			}
-		});
-
-		// properties to list emails
-		Properties gmxProps = new Properties();
-		gmxProps.put("mail.imap.host", "imap.gmx.com");
-		gmxProps.put("mail.imap.port", "993");
-		gmxProps.put("mail.imap.ssl.enable", "true");
-
-		// session to receive emails
-		Session receiveSession = Session.getInstance(gmxProps, new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(gmxUsername, gmxPassword);
-			}
-		});
-
-		try {
-			// Store für die GMX-Verbindung öffnen
-			Store gmxStore = receiveSession.getStore("imaps");
-			gmxStore.connect("imap.gmx.com", gmxUsername, gmxPassword);
-
-			// Ordner für die GMX-Verbindung öffnen
-			Folder gmxFolder = gmxStore.getFolder("INBOX");
-			gmxFolder.open(Folder.READ_WRITE);
-
-			System.out.println("Running ...");
-			while (isRunning == true) {
+		while (isRunning) {
+			try {
 				Thread.sleep(10000);
 
-				// get e-mails from the INBOX list
-				Message[] messages;
-				try {
+				// define a session to send emails
+				sendSession = Session.getInstance(properties, new Authenticator() {
+					@Override
+					protected PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(properties.getProperty("mail.smtp.user"),
+								properties.getProperty("mail.smtp.password"));
+					}
+				});
+
+				// properties to list emails
+				Properties gmxProps = new Properties();
+				gmxProps.put("mail.imap.host", "imap.gmx.com");
+				gmxProps.put("mail.imap.port", "993");
+				gmxProps.put("mail.imap.ssl.enable", "true");
+
+				// session to receive emails
+				Session receiveSession = Session.getInstance(gmxProps, new Authenticator() {
+					@Override
+					protected PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(gmxUsername, gmxPassword);
+					}
+				});
+
+				// Store für die GMX-Verbindung öffnen
+				Store gmxStore = receiveSession.getStore("imaps");
+				gmxStore.connect("imap.gmx.com", gmxUsername, gmxPassword);
+
+				// Ordner für die GMX-Verbindung öffnen
+				Folder gmxFolder = gmxStore.getFolder("INBOX");
+				gmxFolder.open(Folder.READ_WRITE);
+
+				System.out.println("Running ...");
+				while (isRunning == true) {
+					// get e-mails from the INBOX list
+					Message[] messages;
 					messages = gmxFolder.getMessages();
-				} catch (Exception fce) {
-					fce.printStackTrace();
-					gmxFolder.close();
-					gmxFolder = gmxStore.getFolder("INBOX");
-					messages = gmxFolder.getMessages();
-				}
 
-				if (messages != null)
-					for (Message message : messages) {
-						System.out.println("New -Mail with subject: " + message.getSubject());
+					if (messages != null)
+						for (Message message : messages) {
+							System.out.println("New mail with subject: " + message.getSubject());
 
-						if (message.getSubject().contains("Ein Brief kommt in Kürze bei Ihnen an")) {
-							// copy email content
-							Message forwardedMessage = new MimeMessage(sendSession);
-							forwardedMessage.setFrom(new InternetAddress(gmxUsername));
-							forwardedMessage.setRecipients(Message.RecipientType.TO,
-									InternetAddress.parse(gmailUsername));
-							forwardedMessage.setSubject(message.getSubject());
-							forwardedMessage.setText(message.getContent().toString());
-							forwardedMessage.setContent((Multipart) message.getContent());
+							if (message.getSubject().contains("Ein Brief kommt in Kürze bei Ihnen an")) {
+								// copy email content
+								Message forwardedMessage = new MimeMessage(sendSession);
+								forwardedMessage.setFrom(new InternetAddress(gmxUsername));
+								forwardedMessage.setRecipients(Message.RecipientType.TO,
+										InternetAddress.parse(gmailUsername));
+								forwardedMessage.setSubject(message.getSubject());
+								forwardedMessage.setText(message.getContent().toString());
+								forwardedMessage.setContent((Multipart) message.getContent());
 
-							Transport.send(forwardedMessage);
-							System.out.println("E-Mail forwarded: " + message.getSubject());
+								Transport.send(forwardedMessage);
+								System.out.println("E-Mail forwarded: " + message.getSubject());
+							}
+
+							// delete from
+							message.setFlag(Flags.Flag.DELETED, true);
+							System.out.println("Deleted E-Mail with subject: " + message.getSubject());
+
+							// update directory
+							gmxFolder.expunge();
 						}
 
-						// delete from
-						message.setFlag(Flags.Flag.DELETED, true);
-						System.out.println("Deleted E-Mail with subject: " + message.getSubject());
+					// sleep one minute
+					Thread.sleep(1000 * 60);
+				}
 
-						// update directory
-						gmxFolder.expunge();
-					}
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 
