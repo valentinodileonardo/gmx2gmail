@@ -1,27 +1,36 @@
-Deutsche Post Email Forwarder
-Description
-The Deutsche Post Email Forwarder is a program that automates the process of forwarding Deutsche Post emails regarding "BriefankÃ¼ndigung" to desired email addresses. This program is specifically designed for users with GMX email accounts.
+# Deutsche Post Email Forwarder
 
-How it Works
-The program utilizes the credentials provided by the user to log into their GMX email account securely. It then scans the inbox for emails from Deutsche Post with the subject line related to "BriefankÃ¼ndigung". 
-Once an eligible email is found, the program extracts the content and forwards it to the desired email addresses specified by the user.
+## Description
 
-Prerequisites
-A GMX email account. If you don't have one, you can create it at https://www.gmx.com/.
+The Deutsche Post Email Forwarder is a program designed to automate the forwarding process of Deutsche Post emails regarding "Briefankündigung" to specified email addresses. It is tailored for users with GMX email accounts.
 
-Installation
-Clone this repository to your local machine using git clone.
-Export the source into a runnable jar file and execute it.
+## How it Works
 
-Important Notes
-This program is designed specifically for GMX email accounts. It may not work with other email providers.
-Please ensure that you keep your GMX email account credentials secure to protect your privacy and prevent unauthorized access.
-Make sure you have a stable internet connection while running the program to ensure seamless operation.
-Disclaimer
-This program is provided as-is without any warranty. Use it at your own risk. The developers of this program are not responsible for any misuse or unauthorized access to your email account.
+The program securely logs into the user's GMX email account using provided credentials. It then scans the inbox for emails from Deutsche Post with the subject line related to "Briefankündigung". Upon finding an eligible email, the program extracts its content and forwards it to the desired email addresses specified by the user.
 
-Contributing
-If you would like to contribute to this project, please fork the repository and submit a pull request with your changes. We welcome any improvements or bug fixes.
+## Prerequisites
 
-License
+- A GMX email account. If you don't have one, you can create it at [GMX](https://www.gmx.com/).
+
+## Installation
+
+1. Clone this repository to your local machine using `git clone`.
+2. Export the source into a runnable JAR file and execute it.
+
+## Important Notes
+
+- This program is specifically designed for GMX email accounts and may not be compatible with other email providers.
+- Keep your GMX email account credentials secure to protect your privacy and prevent unauthorized access.
+- Ensure a stable internet connection while running the program for seamless operation.
+
+## Disclaimer
+
+This program is provided as-is without any warranty. Use it at your own risk. The developers of this program are not liable for any misuse or unauthorized access to your email account.
+
+## Contributing
+
+If you wish to contribute to this project, fork the repository and submit a pull request with your changes. We welcome any improvements or bug fixes.
+
+## License
+
 This project is licensed under the MIT License.
