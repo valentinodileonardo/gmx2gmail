@@ -1,9 +1,16 @@
 import java.io.Console;
 import java.util.Properties;
-
 import javax.mail.*;
 import javax.mail.internet.*;
 
+/**
+ * @author Valentino
+ * 
+ *         The Deutsche Post Email Forwarder is a program that automates the
+ *         process of forwarding Deutsche Post emails regarding
+ *         "Briefankündigung" to desired email addresses. This program is
+ *         specifically designed for users with GMX email accounts. *
+ */
 public class EmailForwarder {
 
 	// sender and receiver email addresses
@@ -18,7 +25,7 @@ public class EmailForwarder {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				// Perform cleanup or any desired action here
+				// perform cleanup or any desired action here
 				System.out.println("Caught Ctrl+C - Performing cleanup...");
 				sendLastMail();
 				System.out.println("Exiting ...");
@@ -26,6 +33,10 @@ public class EmailForwarder {
 			}
 		});
 
+		// ####################################################################
+		// if you want to run this program without any user input
+		// comment following three lines and set the credentials on top
+		// ####################################################################
 		readGMXUsername();
 		readPasswordFromUser();
 		readGmailUsername();
@@ -53,13 +64,13 @@ public class EmailForwarder {
 					}
 				});
 
-				// properties to list emails
+				// properties to list emails for gmx email address
 				Properties gmxProps = new Properties();
 				gmxProps.put("mail.imap.host", "imap.gmx.com");
 				gmxProps.put("mail.imap.port", "993");
 				gmxProps.put("mail.imap.ssl.enable", "true");
 
-				// session to receive emails
+				// create session to receive gmx emails
 				Session receiveSession = Session.getInstance(gmxProps, new Authenticator() {
 					@Override
 					protected PasswordAuthentication getPasswordAuthentication() {
@@ -67,15 +78,18 @@ public class EmailForwarder {
 					}
 				});
 
-				// Store für die GMX-Verbindung öffnen
+				// open store for gmx
 				Store gmxStore = receiveSession.getStore("imaps");
 				gmxStore.connect("imap.gmx.com", gmxUsername, gmxPassword);
 
-				// Ordner für die GMX-Verbindung öffnen
+				// open directory for gmx email (inbox)
 				Folder gmxFolder = gmxStore.getFolder("INBOX");
 				gmxFolder.open(Folder.READ_WRITE);
 
 				System.out.println("Running ...");
+
+				// using this construction, to prevent the program to exit on exception.
+				// indead of exiting it tries to reopen the directory.
 				while (isRunning == true) {
 					// get e-mails from the INBOX list
 					Message[] messages;
@@ -111,12 +125,17 @@ public class EmailForwarder {
 					Thread.sleep(1000 * 60);
 				}
 
+			} catch (FolderClosedException fce) {
+				// ignore this exception, as this occurs every day, at least one time.
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
 	}
 
+	/**
+	 * send last mail to the receiver, before final close
+	 */
 	private static void sendLastMail() {
 		try {
 			if (sendSession != null) {
@@ -130,7 +149,6 @@ public class EmailForwarder {
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -141,6 +159,11 @@ public class EmailForwarder {
 		}
 	}
 
+	/**
+	 * reads in the gmx username
+	 * 
+	 * @return true if successful
+	 */
 	private static boolean readGMXUsername() {
 		try {
 			System.out.print("Enter a GMX email address: ");
@@ -152,6 +175,11 @@ public class EmailForwarder {
 		return false;
 	}
 
+	/**
+	 * reads in the gmail username
+	 * 
+	 * @return true if successful
+	 */
 	private static boolean readGmailUsername() {
 		try {
 			System.out.print("Enter a Gmail email address: ");
@@ -163,6 +191,11 @@ public class EmailForwarder {
 		return false;
 	}
 
+	/**
+	 * reads in the gmx password (not visible on console)
+	 * 
+	 * @return true if successful
+	 */
 	private static boolean readPasswordFromUser() {
 		Console console = System.console();
 		if (console == null) {
