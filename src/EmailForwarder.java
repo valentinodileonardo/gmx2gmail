@@ -14,6 +14,7 @@ import javax.mail.internet.*;
 public class EmailForwarder {
 
 	// sender and receiver email addresses
+	// set credentials to run the program without user input
 	private static String gmxUsername = "";
 	private static String gmxPassword = "";
 	private static String gmailUsername = "";
@@ -37,10 +38,16 @@ public class EmailForwarder {
 		// if you want to run this program without any user input
 		// comment following three lines and set the credentials on top
 		// ####################################################################
-		readGMXUsername();
-		readPasswordFromUser();
-		readGmailUsername();
-
+		if (gmxUsername.equals("") && gmxPassword.equals("") && gmailUsername.equals("")) {
+			// checking the password as well, as no email provider allows empty passwords
+			// anyway.
+			readGMXUsername();
+			readPasswordFromUser();
+			readGmailUsername();
+		} else {
+			System.out.println("Credentials set already, skipping user input.");
+		}
+		
 		// set properties to receive emails
 		Properties properties = new Properties();
 		properties.put("mail.transport.protocol", "smtp");
@@ -55,6 +62,8 @@ public class EmailForwarder {
 			try {
 				Thread.sleep(10000);
 
+				System.out.println("Trying to connect ...");
+				
 				// define a session to send emails
 				sendSession = Session.getInstance(properties, new Authenticator() {
 					@Override
