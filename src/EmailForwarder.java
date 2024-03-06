@@ -1,4 +1,5 @@
 import java.io.Console;
+import java.time.Instant;
 import java.util.Properties;
 import javax.mail.*;
 import javax.mail.internet.*;
@@ -27,9 +28,9 @@ public class EmailForwarder {
 			@Override
 			public void run() {
 				// perform cleanup or any desired action here
-				System.out.println("Caught Ctrl+C - Performing cleanup...");
+				log("Caught Ctrl+C - Performing cleanup...");
 				sendLastMail();
-				System.out.println("Exiting ...");
+				log("Exiting ...");
 				isRunning = false;
 			}
 		});
@@ -45,9 +46,9 @@ public class EmailForwarder {
 			readPasswordFromUser();
 			readGmailUsername();
 		} else {
-			System.out.println("Credentials set already, skipping user input.");
+			log("Credentials set already, skipping user input.");
 		}
-		
+
 		// set properties to receive emails
 		Properties properties = new Properties();
 		properties.put("mail.transport.protocol", "smtp");
@@ -60,10 +61,8 @@ public class EmailForwarder {
 
 		while (isRunning) {
 			try {
-				Thread.sleep(10000);
+				log("Trying to connect ...");
 
-				System.out.println("Trying to connect ...");
-				
 				// define a session to send emails
 				sendSession = Session.getInstance(properties, new Authenticator() {
 					@Override
@@ -95,7 +94,7 @@ public class EmailForwarder {
 				Folder gmxFolder = gmxStore.getFolder("INBOX");
 				gmxFolder.open(Folder.READ_WRITE);
 
-				System.out.println("Running ...");
+				log("Running ...");
 
 				// using this construction, to prevent the program to exit on exception.
 				// indead of exiting it tries to reopen the directory.
@@ -106,9 +105,14 @@ public class EmailForwarder {
 
 					if (messages != null)
 						for (Message message : messages) {
-							System.out.println("New mail with subject: " + message.getSubject());
 
-							if (message.getSubject().contains("Ein Brief kommt in Kürze bei Ihnen an")) {
+							InternetAddress sender = (InternetAddress) message.getFrom()[0];
+
+							log(String.format("New E-Mail with subject: %s from %s", message.getSubject(),
+									sender.getAddress()));
+
+							if (sender.getAddress().equals("ankuendigung@brief.deutschepost.de")) {
+
 								// copy email content
 								Message forwardedMessage = new MimeMessage(sendSession);
 								forwardedMessage.setFrom(new InternetAddress(gmxUsername));
@@ -119,12 +123,15 @@ public class EmailForwarder {
 								forwardedMessage.setContent((Multipart) message.getContent());
 
 								Transport.send(forwardedMessage);
-								System.out.println("E-Mail forwarded: " + message.getSubject());
+								log(String.format("Forwarded E-Mail with subject: %s from %s", message.getSubject(),
+										sender.getAddress()));
+
 							}
 
 							// delete from
 							message.setFlag(Flags.Flag.DELETED, true);
-							System.out.println("Deleted E-Mail with subject: " + message.getSubject());
+							log(String.format("Deleted E-Mail with subject: %s from %s", message.getSubject(),
+									sender.getAddress()));
 
 							// update directory
 							gmxFolder.expunge();
@@ -133,6 +140,7 @@ public class EmailForwarder {
 					// sleep one minute
 					Thread.sleep(1000 * 60);
 				}
+				Thread.sleep(10000);
 
 			} catch (FolderClosedException fce) {
 				// ignore this exception, as this occurs every day, at least one time.
@@ -140,6 +148,15 @@ public class EmailForwarder {
 				ex.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * logs a formatted message
+	 * 
+	 * @param message the log entry
+	 */
+	private static void log(String message) {
+		System.out.println(String.format("%s: %s", Instant.now().toString(), message));
 	}
 
 	/**
@@ -191,7 +208,7 @@ public class EmailForwarder {
 	 */
 	private static boolean readGmailUsername() {
 		try {
-			System.out.print("Enter a Gmail email address: ");
+			log("Enter a Gmail email address: ");
 			gmailUsername = console.readLine();
 			return true;
 		} catch (Exception ex) {
@@ -208,7 +225,7 @@ public class EmailForwarder {
 	private static boolean readPasswordFromUser() {
 		Console console = System.console();
 		if (console == null) {
-			System.out.println("No console available!");
+			log("No console available!");
 			return false;
 		} else {
 			gmxPassword = new String(console.readPassword("Enter the password: "));
